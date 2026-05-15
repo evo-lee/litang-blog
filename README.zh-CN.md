@@ -164,16 +164,78 @@ Cloudflare 预览曾在这个模式下返回 Worker `500`。
 
 ## 部署
 
-本仓库通过 OpenNext 支持 Cloudflare Workers 部署。
+### 总览：双轨自动化
 
-推荐流程：
+本仓库 push 到 `main` 后，两件事**并行独立**运行：
 
-1. 推送到 `main`。
-2. 让 CI 执行源码检查、测试、内容检查和构建检查。
-3. 让 Cloudflare Workers Git integration 构建并部署同一个提交。
-4. 验证 `/api/health` 和上面列出的 locale 路由。
+| 系统 | 角色 | 触发 | 失败影响 |
+|---|---|---|---|
+| GitHub Actions `ci.yml` | 质量门禁 — lint / type-check / test / build / cf:build | 每次 push 和 PR | 仅显示红叉，不阻断部署 |
+| Cloudflare Workers Builds | 实际构建并部署到生产 | 每次 push（控制台 Git 集成） | 站点未更新 |
 
-如果从本机手动部署，先执行常规校验，再运行 `npm run cf:deploy`。
+两者读取同一 commit，但环境变量分别配置。**不要混淆**：CI 失败不代表部署失败，反之亦然。
+
+### 环境变量与 Secret 工作流
+
+**`.env.example` 是模板，禁止填真值。**`.env.local` 是本机真值文件，已被 `.gitignore` 排除。生产密钥配在 Cloudflare 控制台，不在仓库。
+
+```bash
+# 首次配置：复制模板，仅本机生效
+cp .env.example .env.local
+# 编辑 .env.local 填入真实值（NEXT_PUBLIC_*、可选 ANTHROPIC_API_KEY 等）
+```
+
+三处配置点：
+
+1. **本机 `.env.local`**：本地开发与本地 `cf:preview` 用
+2. **GitHub repo → Settings → Secrets and variables → Actions**：CI 用
+   - Variables（非敏感）：`NEXT_PUBLIC_UMAMI_SCRIPT_URL` / `NEXT_PUBLIC_UMAMI_WEBSITE_ID` / `NEXT_PUBLIC_GA_ID`
+   - Secrets（敏感）：`ANTHROPIC_API_KEY`（仅当手动触发 AI 工作流时需要）
+3. **Cloudflare Workers 项目 → Settings → Variables and Secrets**：生产构建与运行时用
+   - 同样的 `NEXT_PUBLIC_*` 变量必须重复配置一份
+
+### 首次部署步骤
+
+1. **吊销并禁用任何已泄露密钥**（参考 `.env.example` 警告）
+2. **本地校验**：
+   ```bash
+   npm install
+   npm run lint && npm run type-check && npm run test && npm run build
+   npm run cf:preview   # 本地 8787 端口预览 Worker 行为
+   ```
+3. **配 GitHub Vars / Secrets**（如上）
+4. **接 Cloudflare Workers Builds**：
+   - Cloudflare 控制台 → Workers & Pages → **Create** → **Import a repository**
+   - 选 GitHub repo → `main` 分支
+   - Build command: `npm run cf:build`
+   - Deploy command: `npx opennextjs-cloudflare deploy`
+   - 在 Build variables 中加 `NEXT_PUBLIC_*`
+5. **触发部署**：再 push 一次任意 commit，或在控制台手动重跑
+6. **验证**：访问 `/api/health` + 上面列出的 locale 路由
+
+### 手动部署（备用）
+
+若 Cloudflare Git 集成不可用：
+
+```bash
+# 需先 wrangler login
+npm run cf:deploy
+```
+
+### GitHub Actions 工作流说明
+
+- `ci.yml`：每次 push / PR 自动运行。lint、type-check、test、build。不会自动部署。
+- `ai-content-check.yml`：**仅手动触发**（`workflow_dispatch`）。Actions 页面 → AI Content Check → **Run workflow**。需先在 repo Secrets 中配 `ANTHROPIC_API_KEY`。
+
+### 常见错误排查
+
+| 现象 | 原因 | 解决 |
+|---|---|---|
+| CI build 报 `NEXT_PUBLIC_*` 未定义 | GitHub Vars 未配 | 配 repo Variables |
+| Cloudflare 部署成功，分析脚本未加载 | Cloudflare 项目漏配 `NEXT_PUBLIC_*` | 在 Workers Settings 加 |
+| `/zh-CN/about` 返回 500 | 重新引入了 regex rewrite | 检查 `next.config.ts`，参考 Locale 路由小节 |
+| Action 中 ai-content-check 一直红 | 旧版自动触发，缺 API key | 拉最新代码，已改为手动触发 |
+| 推送后站点未更新 | 未接 Cloudflare Git 集成 | 按首次部署步骤 4 配置 |
 
 ## 设计逻辑
 

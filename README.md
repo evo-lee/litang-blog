@@ -172,17 +172,78 @@ these paths in Cloudflare preview:
 
 ## Deployment
 
-The repository supports Cloudflare Workers deployment through OpenNext.
+### Overview: Two Parallel Automated Tracks
 
-Recommended flow:
+When you push to `main`, two independent systems run in parallel:
 
-1. Push to `main`.
-2. Let CI run source checks, tests, content linting, and build checks.
-3. Let Cloudflare Workers Git integration build and deploy the same commit.
-4. Verify `/api/health` and the locale routes listed above.
+| System | Role | Trigger | Failure Impact |
+|---|---|---|---|
+| GitHub Actions `ci.yml` | Quality gate — lint / type-check / test / build / cf:build | Every push and PR | Red mark only; does not block deploy |
+| Cloudflare Workers Builds | Actual production build and deploy | Every push (dashboard Git integration) | Site not updated |
 
-If deploying from a local machine, run the validation suite before
-`npm run cf:deploy`.
+Both read the same commit but require **separate environment variable configuration**. A failing CI run does not mean deployment failed, and vice versa.
+
+### Environment Variable Workflow
+
+**`.env.example` is a template — never put real values in it.** `.env.local` is the local real-value file and is gitignored. Production secrets belong in the Cloudflare dashboard, not in this repository.
+
+```bash
+# First-time setup: copy the template, stays on your machine only
+cp .env.example .env.local
+# Edit .env.local with real values (NEXT_PUBLIC_*, optional ANTHROPIC_API_KEY, etc.)
+```
+
+Three configuration locations:
+
+1. **Local `.env.local`**: used by local dev and local `cf:preview`.
+2. **GitHub repo → Settings → Secrets and variables → Actions**: used by CI.
+   - Variables (non-sensitive): `NEXT_PUBLIC_UMAMI_SCRIPT_URL` / `NEXT_PUBLIC_UMAMI_WEBSITE_ID` / `NEXT_PUBLIC_GA_ID`
+   - Secrets (sensitive): `ANTHROPIC_API_KEY` (only when manually running the AI workflow)
+3. **Cloudflare Workers project → Settings → Variables and Secrets**: used by the production build and runtime.
+   - The same `NEXT_PUBLIC_*` variables must be configured here as well.
+
+### First-Time Deployment Steps
+
+1. **Revoke any leaked credentials** before continuing (see warning in `.env.example`).
+2. **Local validation**:
+   ```bash
+   npm install
+   npm run lint && npm run type-check && npm run test && npm run build
+   npm run cf:preview   # local Worker preview at port 8787
+   ```
+3. **Configure GitHub Vars / Secrets** as listed above.
+4. **Connect Cloudflare Workers Builds**:
+   - Cloudflare dashboard → Workers & Pages → **Create** → **Import a repository**
+   - Pick the GitHub repo → `main` branch
+   - Build command: `npm run cf:build`
+   - Deploy command: `npx opennextjs-cloudflare deploy`
+   - Add `NEXT_PUBLIC_*` under Build variables
+5. **Trigger deploy**: push any commit, or re-run the build from the dashboard.
+6. **Verify**: hit `/api/health` and the locale routes listed above.
+
+### Manual Deployment (Fallback)
+
+When Cloudflare Git integration is unavailable:
+
+```bash
+# wrangler login first
+npm run cf:deploy
+```
+
+### GitHub Actions Workflows
+
+- `ci.yml`: runs automatically on every push and PR. Lint, type-check, test, build. Does **not** deploy.
+- `ai-content-check.yml`: **manual trigger only** (`workflow_dispatch`). Run from the Actions tab → AI Content Check → **Run workflow**. Requires `ANTHROPIC_API_KEY` in repo Secrets.
+
+### Common Failure Modes
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| CI build complains about undefined `NEXT_PUBLIC_*` | GitHub Variables not set | Configure repo Variables |
+| Deploy succeeds but analytics script does not load | Cloudflare project missing `NEXT_PUBLIC_*` | Add them under Workers Settings |
+| `/zh-CN/about` returns 500 | A regex rewrite was reintroduced | Inspect `next.config.ts`; see the Locale Routing section |
+| `ai-content-check` action keeps failing | Outdated workflow with auto-trigger and missing API key | Pull latest — workflow is now manual-only |
+| Push succeeds but site does not update | Cloudflare Git integration not connected | Follow first-time deployment step 4 |
 
 ## Design Logic
 
