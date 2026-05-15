@@ -1,12 +1,9 @@
 name: AI Content Check
 
+# Manual-only trigger. Enable by adding ANTHROPIC_API_KEY secret in repo settings,
+# then run from the Actions tab via "Run workflow".
 on:
-  pull_request:
-    paths:
-      - 'content/**'
-      - 'prompts/**'
-      - 'scripts/ai/**'
-      - 'config/typography/**'
+  workflow_dispatch:
 
 jobs:
   ai-content-check:
