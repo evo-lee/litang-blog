@@ -2,6 +2,15 @@
 
 [English](./README.md) | 简体中文
 
+> **完整文档**见 [`docs/`](./docs/README.zh-CN.md)：
+> [快速开始](./docs/quick-start.zh-CN.md) ·
+> [安装与使用](./docs/installation.zh-CN.md) ·
+> [架构](./docs/architecture.zh-CN.md) ·
+> [内容管线](./docs/content-pipeline.zh-CN.md) ·
+> [自定义](./docs/customization.zh-CN.md) ·
+> [部署运维](./docs/deployment.zh-CN.md) ·
+> [AI 工具](./docs/ai-tools.zh-CN.md)
+
 ## 项目整体说明
 
 `evolee-x` 是一个基于 Next.js 15 App Router 和 OpenNext for Cloudflare Workers

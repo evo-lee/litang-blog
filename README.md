@@ -2,6 +2,15 @@
 
 English | [简体中文](./README.zh-CN.md)
 
+> **Full documentation** lives in [`docs/`](./docs/README.md):
+> [Quick Start](./docs/quick-start.md) ·
+> [Installation](./docs/installation.md) ·
+> [Architecture](./docs/architecture.md) ·
+> [Content Pipeline](./docs/content-pipeline.md) ·
+> [Customization](./docs/customization.md) ·
+> [Deployment](./docs/deployment.md) ·
+> [AI Tools](./docs/ai-tools.md)
+
 ## Project Overview
 
 `evolee-x` is a personal publishing site built with Next.js 15 App Router and
