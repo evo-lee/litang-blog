@@ -23,12 +23,13 @@ cp "$DOCS_DIR"/*.md .
 # 4. rewrite cross-links
 sed -i 's|README\.zh-CN\.md|Home.zh-CN.md|g; s|README\.md|Home.md|g' *.md
 
-# 5. inject per-page TOC via doctoc
-# doctoc inserts between <!-- START doctoc --> / <!-- END doctoc --> if present,
-# otherwise prepends. --github mode matches GitHub anchor slugs.
+# 5. seed nav + doctoc placeholder right after each H1
+python3 "$REPO_ROOT/scripts/wiki/inject-nav.py" .
+
+# 6. doctoc fills the placeholder it found above
 npx --yes doctoc --github --title '## 目录' *.md
 
-# 6. regenerate nested _Sidebar.md from H2 of each page
+# 7. regenerate minimal _Sidebar.md
 python3 "$REPO_ROOT/scripts/wiki/gen-sidebar.py" . > _Sidebar.md
 
 echo "Wiki sync done in $WIKI_DIR"
