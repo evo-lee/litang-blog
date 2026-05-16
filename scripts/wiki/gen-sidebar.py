@@ -68,8 +68,9 @@ def extract_h2(path: Path) -> list[str]:
     return out
 
 
-def render_block(label: str, order: list[tuple[str, str]], wiki_dir: Path) -> list[str]:
-    lines = [f"**{label}**"]
+def render_block(label: str, order: list[tuple[str, str]], wiki_dir: Path, open_default: bool) -> list[str]:
+    open_attr = " open" if open_default else ""
+    lines = [f"<details{open_attr}>", f"<summary><strong>{label}</strong></summary>", ""]
     for display, slug in order:
         path = wiki_dir / f"{slug}.md"
         lines.append(f"- [{display}]({slug})")
@@ -78,6 +79,7 @@ def render_block(label: str, order: list[tuple[str, str]], wiki_dir: Path) -> li
         for h2 in extract_h2(path):
             anchor = slugify(h2)
             lines.append(f"  - [{h2}]({slug}#{anchor})")
+    lines.extend(["", "</details>"])
     return lines
 
 
@@ -87,8 +89,8 @@ def main() -> int:
         return 2
     wiki_dir = Path(sys.argv[1])
     blocks = [
-        render_block("English", EN_ORDER, wiki_dir),
-        render_block("简体中文", ZH_ORDER, wiki_dir),
+        render_block("English", EN_ORDER, wiki_dir, open_default=True),
+        render_block("简体中文", ZH_ORDER, wiki_dir, open_default=False),
     ]
     print("\n\n".join("\n".join(b) for b in blocks))
     return 0

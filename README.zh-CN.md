@@ -2,14 +2,16 @@
 
 [English](./README.md) | 简体中文
 
-> **完整文档**见 [`docs/`](./docs/README.zh-CN.md)：
-> [快速开始](./docs/quick-start.zh-CN.md) ·
-> [安装与使用](./docs/installation.zh-CN.md) ·
-> [架构](./docs/architecture.zh-CN.md) ·
-> [内容管线](./docs/content-pipeline.zh-CN.md) ·
-> [自定义](./docs/customization.zh-CN.md) ·
-> [部署运维](./docs/deployment.zh-CN.md) ·
-> [AI 工具](./docs/ai-tools.zh-CN.md)
+> **完整文档**见 [Wiki](https://github.com/evo-lee/litang-blog/wiki/Home.zh-CN)：
+> [快速开始](https://github.com/evo-lee/litang-blog/wiki/quick-start.zh-CN) ·
+> [安装与使用](https://github.com/evo-lee/litang-blog/wiki/installation.zh-CN) ·
+> [架构](https://github.com/evo-lee/litang-blog/wiki/architecture.zh-CN) ·
+> [内容管线](https://github.com/evo-lee/litang-blog/wiki/content-pipeline.zh-CN) ·
+> [自定义](https://github.com/evo-lee/litang-blog/wiki/customization.zh-CN) ·
+> [部署运维](https://github.com/evo-lee/litang-blog/wiki/deployment.zh-CN) ·
+> [AI 工具](https://github.com/evo-lee/litang-blog/wiki/ai-tools.zh-CN)
+>
+> 源文件位于 [`docs/`](./docs/README.zh-CN.md),Wiki 自动同步。
 
 ## 项目整体说明
 

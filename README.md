@@ -2,14 +2,16 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-> **Full documentation** lives in [`docs/`](./docs/README.md):
-> [Quick Start](./docs/quick-start.md) ·
-> [Installation](./docs/installation.md) ·
-> [Architecture](./docs/architecture.md) ·
-> [Content Pipeline](./docs/content-pipeline.md) ·
-> [Customization](./docs/customization.md) ·
-> [Deployment](./docs/deployment.md) ·
-> [AI Tools](./docs/ai-tools.md)
+> **Full documentation** lives on the [Wiki](https://github.com/evo-lee/litang-blog/wiki):
+> [Quick Start](https://github.com/evo-lee/litang-blog/wiki/quick-start) ·
+> [Installation](https://github.com/evo-lee/litang-blog/wiki/installation) ·
+> [Architecture](https://github.com/evo-lee/litang-blog/wiki/architecture) ·
+> [Content Pipeline](https://github.com/evo-lee/litang-blog/wiki/content-pipeline) ·
+> [Customization](https://github.com/evo-lee/litang-blog/wiki/customization) ·
+> [Deployment](https://github.com/evo-lee/litang-blog/wiki/deployment) ·
+> [AI Tools](https://github.com/evo-lee/litang-blog/wiki/ai-tools)
+>
+> Source under [`docs/`](./docs/README.md) — Wiki is auto-synced.
 
 ## Project Overview
 
