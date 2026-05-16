@@ -1,4 +1,4 @@
-# evolee-x
+# litang-blog
 
 English | [简体中文](./README.zh-CN.md)
 
@@ -15,7 +15,7 @@ English | [简体中文](./README.zh-CN.md)
 
 ## Project Overview
 
-`evolee-x` is a personal publishing site built with Next.js 15 App Router and
+`litang-blog` is a personal publishing site built with Next.js 15 App Router and
 OpenNext for Cloudflare Workers. It is designed for essays, technical writing,
 reading notes, projects, and long-form pages while keeping the runtime
 edge-compatible and database-free.

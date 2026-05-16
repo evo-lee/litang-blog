@@ -7,8 +7,8 @@
 set -euo pipefail
 
 # 修改为你的 Gitee 仓库 SSH 地址，格式: git@gitee.com:用户名/仓库名.git
-REPO_URL="${REPO_URL:-git@gitee.com:your-username/evolee-x.git}"
-APP_DIR="${APP_DIR:-/srv/evolee-x}"
+REPO_URL="${REPO_URL:-git@gitee.com:your-username/litang-blog.git}"
+APP_DIR="${APP_DIR:-/srv/litang-blog}"
 NODE_VERSION=20
 
 log() { echo -e "\n\033[1;32m[setup]\033[0m $*"; }
@@ -94,7 +94,7 @@ if [[ ! -f "$APP_DIR/.env.local" ]]; then
 fi
 
 # ── 7. Nginx 反向代理 ────────────────────────────────────────────────────────
-NGINX_CONF="/etc/nginx/sites-available/evolee-x"
+NGINX_CONF="/etc/nginx/sites-available/litang-blog"
 if [[ ! -f "$NGINX_CONF" ]]; then
   log "写入 Nginx 配置..."
   sudo tee "$NGINX_CONF" > /dev/null <<'NGINX'
@@ -103,7 +103,7 @@ server {
     server_name _;          # 替换为你的域名，如 example.com
 
     location /_next/static/ {
-        alias /srv/evolee-x/.next/static/;
+        alias /srv/litang-blog/.next/static/;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
@@ -121,7 +121,7 @@ server {
     }
 }
 NGINX
-  sudo ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/evolee-x
+  sudo ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/litang-blog
   sudo nginx -t && sudo systemctl reload nginx
 fi
 
@@ -134,4 +134,4 @@ echo ""
 echo "  1. 编辑环境变量:  nano $APP_DIR/.env.local"
 echo "  2. 首次部署:      bash $APP_DIR/scripts/server/deploy.sh"
 echo "  3. 查看进程:      pm2 status"
-echo "  4. 查看日志:      pm2 logs evolee-x"
+echo "  4. 查看日志:      pm2 logs litang-blog"

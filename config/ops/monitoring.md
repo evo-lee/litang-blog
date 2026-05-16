@@ -25,7 +25,7 @@ The monitoring baseline stays intentionally light, but it must answer three ques
 ### Health Endpoint Failure
 
 - Source: Cloudflare or external uptime monitor
-- Target: `https://evolee-x.workers.dev/api/health`
+- Target: `https://litang-blog.workers.dev/api/health`
 - Trigger: 3 consecutive failures within 5 minutes
 - Action: page or immediate notification to the maintainer
 

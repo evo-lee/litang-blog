@@ -2,15 +2,15 @@
 # =============================================================================
 # deploy.sh — 拉取最新代码并重启服务
 # 用法:
-#   手动运行:  bash /srv/evolee-x/scripts/server/deploy.sh
+#   手动运行:  bash /srv/litang-blog/scripts/server/deploy.sh
 #   cron 自动: 见文件末尾注释
 # =============================================================================
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/srv/evolee-x}"
+APP_DIR="${APP_DIR:-/srv/litang-blog}"
 BRANCH="${BRANCH:-main}"
-LOG_FILE="${LOG_FILE:-/var/log/evolee-x-deploy.log}"
-APP_NAME="evolee-x"
+LOG_FILE="${LOG_FILE:-/var/log/litang-blog-deploy.log}"
+APP_NAME="litang-blog"
 
 log()  { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"; }
 err()  { log "ERROR: $*"; exit 1; }
@@ -58,7 +58,7 @@ log "✅ 部署完成 (${REMOTE:0:7})"
 #
 # 方式 A — cron 定时拉取（简单）
 #   sudo crontab -e
-#   加入: */10 * * * * APP_DIR=/srv/evolee-x bash /srv/evolee-x/scripts/server/deploy.sh
+#   加入: */10 * * * * APP_DIR=/srv/litang-blog bash /srv/litang-blog/scripts/server/deploy.sh
 #
 # 方式 B — GitHub Webhook（push 即触发，推荐）
 #   1. 安装 webhook 服务:  sudo apt install webhook

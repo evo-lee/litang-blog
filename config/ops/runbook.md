@@ -6,7 +6,7 @@
 
 1. Open the latest Cloudflare Workers build for the connected `main` branch.
 2. Confirm the configured deploy command, `npm run cf:deploy`, succeeded.
-3. Check `https://evolee-x.workers.dev/api/health`.
+3. Check `https://litang-blog.workers.dev/api/health`.
 4. Confirm the returned `version` matches `package.json`.
 
 ### 2. Roll back a bad deployment

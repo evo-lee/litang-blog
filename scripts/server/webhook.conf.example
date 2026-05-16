@@ -1,8 +1,8 @@
 [
   {
     "id": "deploy",
-    "execute-command": "/srv/evolee-x/scripts/server/deploy.sh",
-    "command-working-directory": "/srv/evolee-x",
+    "execute-command": "/srv/litang-blog/scripts/server/deploy.sh",
+    "command-working-directory": "/srv/litang-blog",
     "response-message": "deploying",
     "trigger-rule": {
       "and": [

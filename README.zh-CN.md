@@ -1,4 +1,4 @@
-# evolee-x
+# litang-blog
 
 [English](./README.md) | 简体中文
 
@@ -15,7 +15,7 @@
 
 ## 项目整体说明
 
-`evolee-x` 是一个基于 Next.js 15 App Router 和 OpenNext for Cloudflare Workers
+`litang-blog` 是一个基于 Next.js 15 App Router 和 OpenNext for Cloudflare Workers
 的个人内容站点。它面向随笔、技术文章、读书笔记、项目页和长页面，同时保持边缘运行兼容、不依赖数据库。
 
 当前实现使用构建期生成的内容产物作为运行时数据源，用真实 locale 路由保证 Cloudflare 兼容，并通过统一 helper 管理 SEO、图片、分析、搜索和中文排版。

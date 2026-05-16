@@ -1,8 +1,8 @@
-# evolee-x 项目文档
+# litang-blog 项目文档
 
 [English](./README.md) | 简体中文
 
-`evolee-x` 站点的 Wiki 风格文档，随代码版本控制，GitHub 与本地均可渲染。
+`litang-blog` 站点的 Wiki 风格文档，随代码版本控制，GitHub 与本地均可渲染。
 
 ## 目录
 

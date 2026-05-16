@@ -1,8 +1,8 @@
-# evolee-x Documentation
+# litang-blog Documentation
 
 English | [简体中文](./README.zh-CN.md)
 
-Wiki-style documentation for the `evolee-x` site. Lives in the repo, version-controlled with the code, rendered both on GitHub and locally.
+Wiki-style documentation for the `litang-blog` site. Lives in the repo, version-controlled with the code, rendered both on GitHub and locally.
 
 ## Table of Contents
 

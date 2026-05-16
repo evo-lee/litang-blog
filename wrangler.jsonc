@@ -3,7 +3,7 @@
   // Reference: https://developers.cloudflare.com/workers/wrangler/configuration/
 
   // Worker name — must be unique within your Cloudflare account.
-  "name": "evolee-x",
+  "name": "litang-blog",
 
   // Entry point produced by `opennextjs-cloudflare build`.
   "main": ".open-next/worker.js",
