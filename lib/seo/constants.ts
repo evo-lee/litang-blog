@@ -6,9 +6,9 @@ export const seoConfig = {
   siteDescription: siteConfig.description,
   baseUrl: siteConfig.baseUrl,
   locale: siteConfig.locale,
-  defaultOgImage: `${siteConfig.baseUrl}/og-default.svg`,
+  defaultOgImage: `${siteConfig.baseUrl}${siteConfig.seo.defaultOgImage}`,
   author: {
-    name: siteConfig.author,
-    url: siteConfig.baseUrl,
+    name: siteConfig.author.name,
+    url: siteConfig.author.url || siteConfig.baseUrl,
   },
 } as const;

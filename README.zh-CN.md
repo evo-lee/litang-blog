@@ -132,6 +132,12 @@ npm run cf:versions:upload
 
 ## 配置说明
 
+### 站点个性化（Fork 友好）
+
+**所有个人信息集中在 `lib/site.ts` 一个文件**。Fork 后改这一个文件即可完成大部分换肤：身份、作者、社交链接、footer 文案、SEO 默认值、导航、feature flag。所有消费方（`lib/seo/constants.ts`、`components/site/Footer.tsx`、`components/site/Nav.tsx`、sitemap、robots、RSS）都从这里 import。
+
+### 构建与基础设施
+
 修改构建或部署行为前，先看这些文件：
 
 - `package.json`：脚本入口和工具链。
@@ -177,14 +183,14 @@ Cloudflare 预览曾在这个模式下返回 Worker `500`。
 
 ### 工作原理
 
-`.env*` 文件**只供本地开发用**，已被 `.gitignore` 排除，不会进入 CI。真正的部署源是 `.github/workflows/deploy.yml`，由它从 GitHub Variables（公开）和 GitHub Secrets（敏感）注入环境变量，构建并直接部署到 Cloudflare Workers。
+`.env*` 文件**只供本地开发用**，已被 `.gitignore` 排除。真正的部署链路是 **Cloudflare Workers Builds**（CF 控制台的 Git 集成）。每次 push 到 `main` 时 Cloudflare 端会拉代码、跑构建、从该项目的 Build variables 注入 `NEXT_PUBLIC_*` 后部署。
 
-每次 push 到 `main` 会并行触发两个 workflow：
+GitHub Actions 只负责质量门禁：
 
 | Workflow | 角色 | 失败影响 |
 |---|---|---|
-| `ci.yml` | 质量门禁 — lint / type-check / test / build | 仅红叉 |
-| `deploy.yml` | 构建 + 部署到 Cloudflare Workers | 站点未更新 |
+| `ci.yml` | 质量门禁 — lint / type-check / test / build | 仅红叉，不阻断部署 |
+| Cloudflare Workers Builds | push 到 `main` 时构建并部署 | 站点未更新 |
 
 ### 变量分类
 
@@ -205,27 +211,32 @@ Cloudflare 预览曾在这个模式下返回 Worker `500`。
 | `NEXT_PUBLIC_ENABLE_GA` | `true` |
 | `NEXT_PUBLIC_ENABLE_HETI` | `true` |
 
-**2. CI 专用敏感值 — GitHub Secrets**
+**2. Cloudflare Workers Builds Build variables — Cloudflare 控制台**
 
-仓库 → Settings → Secrets and variables → Actions → **Secrets** 标签：
+部署用的真实构建在 Cloudflare 端跑。把 1) 表里同样的 `NEXT_PUBLIC_*` 配到该 Worker 项目的 Build variables，bundle 才有值。
+
+Cloudflare 控制台 → Workers & Pages → 选项目 → **Settings → Builds → Build variables**。
+
+**3. CI 专用敏感值 — GitHub Secrets**
+
+仅手动 AI workflow 需要。仓库 → Settings → Secrets and variables → Actions → **Secrets** 标签：
 
 | Key | 用途 |
 |---|---|
-| `CLOUDFLARE_API_TOKEN` | wrangler 鉴权。在 CF → My Profile → API Tokens → 模板 "Edit Cloudflare Workers" 创建 |
-| `CLOUDFLARE_ACCOUNT_ID` | 目标账号 ID。CF dashboard 右栏即可看到 |
-| `ANTHROPIC_API_KEY` | 仅当手动跑 `ai-content-check` workflow 时需要 |
+| `ANTHROPIC_API_KEY` | 手动跑 `ai-content-check` workflow 时需要 |
 
-**3. Cloudflare Worker 运行时 secret — Cloudflare 控制台**
+**4. Cloudflare Worker 运行时 secret — Cloudflare 控制台**
 
-Worker 代码内通过 `env.X` 读取。跨部署保留 — `wrangler deploy` **不会**清空。当前本项目**不需要**任何运行时 secret：analytics key 是构建期 bundle 进去的（类 1），AI key 仅 CI 脚本用（类 2），没有数据库、没有后端鉴权。仅当 Worker 代码本身需要读时再加。
+Worker 代码内通过 `env.X` 读取。跨部署保留。当前本项目**不需要**任何运行时 secret：analytics key 是构建期 bundle 进去的（类 1），AI key 仅 CI 脚本用（类 3），无数据库、无后端鉴权。仅当 Worker 代码本身需要时再加。
 
 ### 首次配置
 
 1. **本地开发** — `cp .env.example .env.local`，填值，供 `npm run dev` 和 `npm run cf:preview` 用。**不要提交** `.env.local`
-2. **配 GitHub Variables** — 上表所有 `NEXT_PUBLIC_*` 键
-3. **配 GitHub Secrets** — `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`
-4. **push 到 `main`** — `deploy.yml` 自动触发。Actions 页面查看进度
-5. **验证** — 访问 `/api/health` 及上面列出的 locale 路由
+2. **接 Cloudflare Workers Builds** — CF 控制台 → Workers & Pages → Create → Import a repository → 选仓库、`main` 分支。Build command：`npm run cf:build`。Deploy command：`npx opennextjs-cloudflare deploy`
+3. **配 Cloudflare Build variables** — 上表所有 `NEXT_PUBLIC_*` 加到 Worker 项目的 Build settings
+4. **配 GitHub Variables** — 同样的 `NEXT_PUBLIC_*`，让 `ci.yml` 构建步骤能跑通
+5. **push 到 `main`** — Cloudflare 自动部署。在 Worker 的 **Deployments** 标签看进度
+6. **验证** — 访问 `/api/health` 及上面列出的 locale 路由
 
 ### 手动部署（备用）
 
@@ -241,7 +252,6 @@ npm run cf:deploy
 ### GitHub Actions 工作流
 
 - `ci.yml`：每次 push / PR 自动跑 lint / type-check / test / build。**不部署**
-- `deploy.yml`：push 到 `main` 时构建并部署到 Cloudflare。也可通过 `workflow_dispatch` 手动触发
 - `ai-content-check.yml`：**仅手动触发**。需 Secrets 中配 `ANTHROPIC_API_KEY`
 - `sync-wiki.yml`：把 `docs/` 同步到 GitHub wiki
 
@@ -249,11 +259,10 @@ npm run cf:deploy
 
 | 现象 | 原因 | 解决 |
 |---|---|---|
-| `deploy.yml` 报 "Authentication error" | `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` 缺失或错误 | 重新配 Secrets |
-| 部署成功但 analytics 脚本不加载 | `NEXT_PUBLIC_*` GitHub Variables 未配 | 配 repo Variables |
-| push 到 `main` 没动静 | `deploy.yml` 缺失，或环境变量没暴露给该分支 | 看 Actions 页面；检查 repo Settings → Environments |
+| Cloudflare 构建报 `NEXT_PUBLIC_*` 未定义 | Cloudflare 端 Build variables 未配 | Worker 项目 → Settings → Builds 里补 |
+| 部署成功但 analytics 脚本不加载 | Build variables 没配或值错 | 重新核对 Cloudflare Build variables |
+| push 到 `main` 不触发部署 | 未接 Cloudflare Git 集成 | CF 控制台 → Workers & Pages → Import repository |
 | `/zh-CN/about` 返回 500 | 重新引入了 regex rewrite | 检查 `next.config.ts`，参考 Locale 路由小节 |
-| Cloudflare 控制台旧版 Git 集成也在并行部署 | 两条链路都连着仓库 | 在 CF 控制台断开 Workers Builds 的 Git 集成。`deploy.yml` 是唯一权威链路 |
 
 ## 设计逻辑
 
