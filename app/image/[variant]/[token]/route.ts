@@ -15,8 +15,18 @@ export async function GET(
     return new NextResponse('Unknown image variant', { status: 404 });
   }
 
-  const src = decodeImageToken(token);
-  const target = src.startsWith('http://') || src.startsWith('https://') ? src : new URL(src, request.url).toString();
+  let src: string;
+  try {
+    src = decodeImageToken(token);
+  } catch {
+    return new NextResponse('Invalid image token', { status: 400 });
+  }
+
+  if (!src.startsWith('/') || src.startsWith('//') || src.startsWith('/image/')) {
+    return new NextResponse('Image source not allowed', { status: 400 });
+  }
+
+  const target = new URL(src, request.url).toString();
   const upstream = await fetch(target);
 
   if (!upstream.ok) {

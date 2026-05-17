@@ -7,7 +7,6 @@ const CONTENT_DIR = path.join(process.cwd(), 'content');
 export const POSTS_DIR = path.join(CONTENT_DIR, 'posts');
 export const PAGES_DIR = path.join(CONTENT_DIR, 'pages');
 export const GENERATED_DIR = path.join(CONTENT_DIR, '.generated');
-export const GENERATED_COVERS_DIR = path.join(GENERATED_DIR, 'covers');
 export const GENERATED_SEARCH_INDEX = path.join(GENERATED_DIR, 'search-index.json');
 
 export function pathToSlug(baseDir: string, filePath: string): string {

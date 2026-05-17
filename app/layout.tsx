@@ -64,7 +64,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body className="light" suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=window.localStorage.getItem('${THEME_STORAGE_KEY}');var t=s==='dark'||s==='light'?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.body.className=t;}catch(e){}})();`,
+            __html: `(function(){try{var s=window.localStorage.getItem('${THEME_STORAGE_KEY}');var t=s==='dark'||s==='light'?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.body.className=t;var p=location.pathname;var lang=p.indexOf('/en')===0?'en':'zh-CN';document.documentElement.lang=lang;}catch(e){}})();`,
           }}
         />
         <StructuredData data={buildPersonStructuredData()} />
@@ -73,8 +73,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <Suspense fallback={null}>
           <RouteChangeDebug />
         </Suspense>
+        {shouldLoadGA ? <GoogleAnalytics gaId={gaId} /> : null}
       </body>
-      {shouldLoadGA ? <GoogleAnalytics gaId={gaId} /> : null}
     </html>
   );
 }

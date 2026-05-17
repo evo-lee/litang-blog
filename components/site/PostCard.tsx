@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { formatDate, formatReadTime } from '@/lib/format';
-import { getLocalePrefix, withLocalePrefix } from '@/lib/i18n/routes';
+import { getLocalePrefix, prefixToLocale, withLocalePrefix } from '@/lib/i18n/routes';
 import type { PostSummary } from '@/lib/content/types';
 import { CoverPlaceholder, pickCoverColor } from './CoverPlaceholder';
 
@@ -19,9 +19,10 @@ export function PostCard({
 }) {
   const cardClass = featured ? 'post-card post-card--featured' : 'post-card';
   const coverClass = featured ? 'post-card__cover post-card__cover--featured' : 'post-card__cover';
-  const readTime = formatReadTime(post.excerpt || post.description || post.title);
   const pathname = usePathname() || '/';
   const localePrefix = getLocalePrefix(pathname);
+  const locale = prefixToLocale(localePrefix);
+  const readTime = formatReadTime(post.excerpt || post.description || post.title, locale);
 
   const cardRef = useRef<HTMLAnchorElement>(null);
 
@@ -66,7 +67,7 @@ export function PostCard({
       </div>
       <div className="post-card__body">
         <div className="post-card__meta">
-          <span>{formatDate(post.date)}</span>
+          <span>{formatDate(post.date, locale)}</span>
           <span className="post-card__meta-dot">·</span>
           <span>{readTime}</span>
         </div>

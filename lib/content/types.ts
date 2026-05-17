@@ -69,14 +69,3 @@ export interface Page extends PageFrontmatter, ProcessedContent {
   content: string;
 }
 
-export interface SearchIndexEntry {
-  locale: AppLocale;
-  slug: string;
-  url: string;
-  title: string;
-  description: string;
-  summary: string;
-  category?: string;
-  tags: string[];
-  text: string;
-}

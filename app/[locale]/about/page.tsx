@@ -1,23 +1,14 @@
 import AboutPage, { generateMetadata as generateBaseMetadata } from '@/app/(site)/about/page';
-import { APP_LOCALES, isAppLocale } from '@/lib/i18n/config';
+import { localeStaticParams, resolveLocaleSearchParams, type LocaleParamsPromise } from '@/lib/i18n/locale-wrapper';
 
-type PageProps = {
-  params: Promise<{ locale: string }>;
-};
+type PageProps = { params: LocaleParamsPromise };
 
-export function generateStaticParams() {
-  return APP_LOCALES.map((locale) => ({ locale }));
-}
-
-async function localeSearchParams(params: PageProps['params']) {
-  const { locale } = await params;
-  return { __locale: isAppLocale(locale) ? locale : 'zh-CN' };
-}
+export const generateStaticParams = localeStaticParams;
 
 export async function generateMetadata({ params }: PageProps) {
-  return generateBaseMetadata({ searchParams: localeSearchParams(params) });
+  return generateBaseMetadata({ searchParams: resolveLocaleSearchParams(params) });
 }
 
 export default function LocaleAboutPage({ params }: PageProps) {
-  return <AboutPage searchParams={localeSearchParams(params)} />;
+  return <AboutPage searchParams={resolveLocaleSearchParams(params)} />;
 }

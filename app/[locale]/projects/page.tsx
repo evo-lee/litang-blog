@@ -1,19 +1,14 @@
-import ProjectsPage from '@/app/(site)/projects/page';
-import { APP_LOCALES, isAppLocale } from '@/lib/i18n/config';
+import ProjectsPage, { generateMetadata as generateBaseMetadata } from '@/app/(site)/projects/page';
+import { localeStaticParams, resolveLocaleSearchParams, type LocaleParamsPromise } from '@/lib/i18n/locale-wrapper';
 
-type PageProps = {
-  params: Promise<{ locale: string }>;
-};
+type PageProps = { params: LocaleParamsPromise };
 
-export function generateStaticParams() {
-  return APP_LOCALES.map((locale) => ({ locale }));
-}
+export const generateStaticParams = localeStaticParams;
 
-async function localeSearchParams(params: PageProps['params']) {
-  const { locale } = await params;
-  return { __locale: isAppLocale(locale) ? locale : 'zh-CN' };
+export async function generateMetadata({ params }: PageProps) {
+  return generateBaseMetadata({ searchParams: resolveLocaleSearchParams(params) });
 }
 
 export default function LocaleProjectsPage({ params }: PageProps) {
-  return <ProjectsPage searchParams={localeSearchParams(params)} />;
+  return <ProjectsPage searchParams={resolveLocaleSearchParams(params)} />;
 }

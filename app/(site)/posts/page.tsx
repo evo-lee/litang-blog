@@ -7,16 +7,19 @@ import { getRequestLocale } from '@/lib/i18n/server';
 import { buildPageMetadata } from '@/lib/seo/metadata';
 import { buildCollectionPageStructuredData } from '@/lib/seo/structured-data';
 
-const TITLE = '全部文章';
-const DESCRIPTION = '所有公开发表的文章列表，可按关键词搜索。';
-
-export async function generateMetadata(): Promise<Metadata> {
-  return buildPageMetadata({ path: '/posts', title: TITLE, description: DESCRIPTION });
-}
-
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const locale = await getRequestLocale(searchParams);
+  const messages = getLocaleMessages(locale);
+  return buildPageMetadata({
+    path: locale === 'zh-CN' ? '/posts' : `/${locale}/posts`,
+    title: messages.posts.title,
+    description: messages.posts.description,
+  });
+}
 
 export default async function PostsPage({ searchParams }: PageProps) {
   const locale = await getRequestLocale(searchParams);
@@ -27,9 +30,9 @@ export default async function PostsPage({ searchParams }: PageProps) {
     <main className="container page-shell">
       <StructuredData
         data={buildCollectionPageStructuredData({
-          title: TITLE,
-          description: DESCRIPTION,
-          path: '/posts',
+          title: messages.posts.title,
+          description: messages.posts.description,
+          path: locale === 'zh-CN' ? '/posts' : `/${locale}/posts`,
         })}
       />
       <header className="page-header">

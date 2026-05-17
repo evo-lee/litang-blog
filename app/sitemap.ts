@@ -1,37 +1,32 @@
 import type { MetadataRoute } from 'next';
-import {
-  getRuntimeCategories,
-  getRuntimePostBySlug,
-  getRuntimePosts,
-  getRuntimeTags,
-} from '@/lib/content/runtime';
+import { getRuntimePostBySlug, getRuntimePosts } from '@/lib/content/runtime';
+import { APP_LOCALES } from '@/lib/i18n/config';
 import { siteConfig } from '@/lib/site';
 
+const STATIC_PATHS = ['', '/posts', '/projects', '/about'] as const;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const posts = getRuntimePosts();
-  const tags = getRuntimeTags();
-  const categories = getRuntimeCategories();
+  const entries: MetadataRoute.Sitemap = [];
 
-  const staticRoutes = ['', '/posts', '/projects', '/about'].map((path) => ({
-    url: `${siteConfig.baseUrl}${path || '/'}`,
-  }));
+  for (const path of STATIC_PATHS) {
+    entries.push({ url: `${siteConfig.baseUrl}${path || '/'}` });
+    for (const locale of APP_LOCALES) {
+      entries.push({ url: `${siteConfig.baseUrl}/${locale}${path}` });
+    }
+  }
 
-  const postRoutes = posts.flatMap((summary) => {
-    const post = getRuntimePostBySlug(summary.slug);
-    if (!post) return [];
-    return [{
-      url: `${siteConfig.baseUrl}${post.url}`,
-      lastModified: post.updated || post.date,
-    }];
-  });
+  for (const locale of APP_LOCALES) {
+    const posts = getRuntimePosts(locale);
+    for (const summary of posts) {
+      const post = getRuntimePostBySlug(summary.slug, locale);
+      if (!post) continue;
+      const lastModified = post.updated || post.date;
+      entries.push({
+        url: `${siteConfig.baseUrl}${locale === 'zh-CN' ? '' : `/${locale}`}${post.url}`,
+        lastModified,
+      });
+    }
+  }
 
-  const tagRoutes = tags.map((tag) => ({
-    url: `${siteConfig.baseUrl}/tags/${encodeURIComponent(tag)}`,
-  }));
-
-  const categoryRoutes = categories.map((category) => ({
-    url: `${siteConfig.baseUrl}/categories/${encodeURIComponent(category)}`,
-  }));
-
-  return [...staticRoutes, ...postRoutes, ...tagRoutes, ...categoryRoutes];
+  return entries;
 }

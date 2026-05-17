@@ -2,7 +2,8 @@ import PostPage, {
   generateMetadata as generateBaseMetadata,
   generateStaticParams as generateBaseStaticParams,
 } from '@/app/(site)/posts/[slug]/page';
-import { APP_LOCALES, isAppLocale } from '@/lib/i18n/config';
+import { APP_LOCALES } from '@/lib/i18n/config';
+import { resolveLocaleSearchParams, type LocaleParamsPromise } from '@/lib/i18n/locale-wrapper';
 
 type PageProps = {
   params: Promise<{ locale: string; slug: string }>;
@@ -13,11 +14,6 @@ export async function generateStaticParams() {
   return APP_LOCALES.flatMap((locale) => posts.map((post) => ({ locale, slug: post.slug })));
 }
 
-async function localeSearchParams(params: PageProps['params']) {
-  const { locale } = await params;
-  return { __locale: isAppLocale(locale) ? locale : 'zh-CN' };
-}
-
 async function slugParams(params: PageProps['params']) {
   const { slug } = await params;
   return { slug };
@@ -26,10 +22,15 @@ async function slugParams(params: PageProps['params']) {
 export async function generateMetadata({ params }: PageProps) {
   return generateBaseMetadata({
     params: slugParams(params),
-    searchParams: localeSearchParams(params),
+    searchParams: resolveLocaleSearchParams(params as LocaleParamsPromise),
   });
 }
 
 export default function LocalePostPage({ params }: PageProps) {
-  return <PostPage params={slugParams(params)} searchParams={localeSearchParams(params)} />;
+  return (
+    <PostPage
+      params={slugParams(params)}
+      searchParams={resolveLocaleSearchParams(params as LocaleParamsPromise)}
+    />
+  );
 }

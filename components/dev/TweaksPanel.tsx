@@ -5,7 +5,6 @@ import {
   type CSSProperties,
   useCallback,
   useEffect,
-  useRef,
   useState,
 } from 'react';
 import { THEME_STORAGE_KEY } from '@/lib/theme';
@@ -72,7 +71,6 @@ function readInitial(): Tweaks {
 export function TweaksPanel() {
   const [open, setOpen] = useState(false);
   const [tweaks, setTweaks] = useState<Tweaks>(DEFAULTS);
-  const dragRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -111,7 +109,7 @@ export function TweaksPanel() {
   }
 
   return (
-    <div ref={dragRef} className="twk-panel" data-noncommentable="">
+    <div className="twk-panel" data-noncommentable="">
       <div className="twk-hd">
         <b>Tweaks (dev)</b>
         <button className="twk-x" onClick={() => setOpen(false)} aria-label="Close">

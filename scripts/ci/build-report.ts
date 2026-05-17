@@ -60,6 +60,12 @@ async function main() {
     warnings.push('No app routes were found in the build manifest.');
   }
 
+  await mkdir(OUTPUT_DIR, { recursive: true });
+  const existingFiles = await readdir(OUTPUT_DIR);
+  if (!existingFiles.includes('.gitkeep')) {
+    warnings.push('reports/build/.gitkeep is missing.');
+  }
+
   const report: BuildReport = {
     generatedAt: new Date().toISOString(),
     durationMs: Date.now() - startedAt,
@@ -71,14 +77,8 @@ async function main() {
     warnings,
   };
 
-  await mkdir(OUTPUT_DIR, { recursive: true });
   await writeFile(OUTPUT_PATH, JSON.stringify(report, null, 2));
   await writeFile(MARKDOWN_PATH, renderMarkdown(report));
-
-  const existingFiles = await readdir(OUTPUT_DIR);
-  if (!existingFiles.includes('.gitkeep')) {
-    warnings.push('reports/build/.gitkeep is missing.');
-  }
 
   console.log(`[build-report] Wrote ${OUTPUT_PATH}`);
   console.log(`[build-report] Wrote ${MARKDOWN_PATH}`);

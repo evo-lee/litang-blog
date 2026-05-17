@@ -11,13 +11,18 @@ import { getLocaleMessages } from '@/lib/i18n/messages';
 import { getRequestLocale } from '@/lib/i18n/server';
 import { buildPageMetadata } from '@/lib/seo/metadata';
 import { buildWebsiteStructuredData } from '@/lib/seo/structured-data';
-import { siteConfig } from '@/lib/site';
 
-export async function generateMetadata(): Promise<Metadata> {
+type MetadataProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export async function generateMetadata({ searchParams }: MetadataProps): Promise<Metadata> {
+  const locale = await getRequestLocale(searchParams);
+  const messages = getLocaleMessages(locale);
   return buildPageMetadata({
-    path: '/',
-    title: siteConfig.title,
-    description: siteConfig.description,
+    path: locale === 'zh-CN' ? '/' : `/${locale}`,
+    title: messages.siteMeta.title,
+    description: messages.siteMeta.description,
   });
 }
 

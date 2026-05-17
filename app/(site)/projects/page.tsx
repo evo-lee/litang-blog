@@ -6,22 +6,25 @@ import { getRequestLocale } from '@/lib/i18n/server';
 import { buildPageMetadata } from '@/lib/seo/metadata';
 import { buildCollectionPageStructuredData } from '@/lib/seo/structured-data';
 
-const TITLE = '作品集';
-const DESCRIPTION = '正在构建中，敬请期待。';
-
 const PORTFOLIO_PLACEHOLDERS = [
-  { id: 'evonote', title: 'EvoNote', status: '构建中', summary: '一个为公开学习设计的笔记产品' },
-  { id: 'weather', title: '极简天气', status: '构建中', summary: '一个有意做减法的 Web App' },
-  { id: 'reads', title: '读书笔记站', status: '构建中', summary: '面向自己的阅读卡片库' },
+  { id: 'evonote', title: 'EvoNote', summary: '一个为公开学习设计的笔记产品' },
+  { id: 'weather', title: '极简天气', summary: '一个有意做减法的 Web App' },
+  { id: 'reads', title: '读书笔记站', summary: '面向自己的阅读卡片库' },
 ];
-
-export async function generateMetadata(): Promise<Metadata> {
-  return buildPageMetadata({ path: '/projects', title: TITLE, description: DESCRIPTION });
-}
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const locale = await getRequestLocale(searchParams);
+  const messages = getLocaleMessages(locale);
+  return buildPageMetadata({
+    path: locale === 'zh-CN' ? '/projects' : `/${locale}/projects`,
+    title: messages.projects.title,
+    description: messages.projects.description,
+  });
+}
 
 export default async function ProjectsPage({ searchParams }: PageProps) {
   const locale = await getRequestLocale(searchParams);
@@ -31,9 +34,9 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
     <main className="container page-shell">
       <StructuredData
         data={buildCollectionPageStructuredData({
-          title: TITLE,
-          description: DESCRIPTION,
-          path: '/projects',
+          title: messages.projects.title,
+          description: messages.projects.description,
+          path: locale === 'zh-CN' ? '/projects' : `/${locale}/projects`,
         })}
       />
       <header className="page-header">

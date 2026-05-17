@@ -43,7 +43,7 @@ export default async function PostPage({ params, searchParams }: PageProps) {
   const post = getRuntimePostBySlug(slug, locale);
   if (!post) notFound();
 
-  const readTime = formatReadTime(post.text || post.excerpt || post.title);
+  const readTime = formatReadTime(post.text || post.excerpt || post.title, locale);
   const cover = post.coverImage;
   const showPlaceholder = !cover?.src || cover.source === 'default';
 
@@ -88,7 +88,7 @@ export default async function PostPage({ params, searchParams }: PageProps) {
             )}
             <h1 className="article-header__title">{post.title}</h1>
             <div className="article-header__meta">
-              <span>{formatDate(post.date)}</span>
+              <span>{formatDate(post.date, locale)}</span>
               <span>·</span>
               <span>{readTime}</span>
               {post.author ? (
@@ -108,7 +108,7 @@ export default async function PostPage({ params, searchParams }: PageProps) {
 
         <ArticleToc
           headings={post.headings.filter((heading) => heading.level <= 3)}
-          meta={`${formatDate(post.date)} · ${readTime}`}
+          meta={`${formatDate(post.date, locale)} · ${readTime}`}
         />
       </main>
     </>
