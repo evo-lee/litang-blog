@@ -1,31 +1,68 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { formatDate, formatReadTime } from '@/lib/format';
 import { getLocalePrefix, withLocalePrefix } from '@/lib/i18n/routes';
 import type { PostSummary } from '@/lib/content/types';
 import { CoverPlaceholder, pickCoverColor } from './CoverPlaceholder';
 
-export function PostCard({ post, featured = false }: { post: PostSummary; featured?: boolean }) {
+export function PostCard({
+  post,
+  featured = false,
+  index = 0,
+}: {
+  post: PostSummary;
+  featured?: boolean;
+  index?: number;
+}) {
   const cardClass = featured ? 'post-card post-card--featured' : 'post-card';
   const coverClass = featured ? 'post-card__cover post-card__cover--featured' : 'post-card__cover';
   const readTime = formatReadTime(post.excerpt || post.description || post.title);
   const pathname = usePathname() || '/';
   const localePrefix = getLocalePrefix(pathname);
 
+  const cardRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const delay = Math.min(index, 8) * 120;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            window.setTimeout(() => el.classList.add('is-revealed'), delay);
+            obs.disconnect();
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -10% 0px' }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [index]);
+
   return (
-    <Link href={withLocalePrefix(post.url, localePrefix)} className={cardClass}>
+    <Link
+      ref={cardRef}
+      href={withLocalePrefix(post.url, localePrefix)}
+      className={cardClass}
+    >
       <div className={coverClass}>
-        {post.coverImage?.src && post.coverImage.source !== 'default' ? (
-          <img
-            src={post.coverImage.src}
-            alt={post.coverImage.alt || post.title}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        ) : (
-          <CoverPlaceholder color={pickCoverColor(post.slug)} />
-        )}
+        <div className="post-card__cover-inner">
+          {post.coverImage?.src && post.coverImage.source !== 'default' ? (
+            <img
+              src={post.coverImage.src}
+              alt={post.coverImage.alt || post.title}
+              className="post-card__cover-img"
+            />
+          ) : (
+            <CoverPlaceholder color={pickCoverColor(post.slug)} />
+          )}
+        </div>
+        <div className="post-card__cover-overlay" aria-hidden="true" />
       </div>
       <div className="post-card__body">
         <div className="post-card__meta">

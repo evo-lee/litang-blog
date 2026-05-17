@@ -47,8 +47,8 @@ export function PostGrid({
         <p className="empty">{emptyLabel}</p>
       ) : (
         <div className="posts-grid">
-          {filtered.map((post) => (
-            <PostCard key={post.slug} post={post} />
+          {filtered.map((post, i) => (
+            <PostCard key={post.slug} post={post} index={i} />
           ))}
         </div>
       )}
