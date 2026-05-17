@@ -183,78 +183,85 @@ these paths in Cloudflare preview:
 
 ## Deployment
 
-### Overview: Two Parallel Automated Tracks
+### How It Works
 
-When you push to `main`, two independent systems run in parallel:
+`.env*` files are for **local development only** and are gitignored. They are never copied to CI. The canonical deployment source is `.github/workflows/deploy.yml`, which injects values from GitHub Variables (public) and GitHub Secrets (sensitive), then builds and deploys directly to Cloudflare Workers.
 
-| System | Role | Trigger | Failure Impact |
-|---|---|---|---|
-| GitHub Actions `ci.yml` | Quality gate — lint / type-check / test / build / cf:build | Every push and PR | Red mark only; does not block deploy |
-| Cloudflare Workers Builds | Actual production build and deploy | Every push (dashboard Git integration) | Site not updated |
+Every push to `main` runs two parallel workflows:
 
-Both read the same commit but require **separate environment variable configuration**. A failing CI run does not mean deployment failed, and vice versa.
+| Workflow | Role | Failure Impact |
+|---|---|---|
+| `ci.yml` | Quality gate — lint / type-check / test / build | Red badge only |
+| `deploy.yml` | Build + deploy to Cloudflare Workers | Site not updated |
 
-### Environment Variable Workflow
+### Variable Classification
 
-**`.env.example` is a template — never put real values in it.** `.env.local` is the local real-value file and is gitignored. Production secrets belong in the Cloudflare dashboard, not in this repository.
+There are three categories. Misplacing them is the most common deploy failure.
 
-```bash
-# First-time setup: copy the template, stays on your machine only
-cp .env.example .env.local
-# Edit .env.local with real values (NEXT_PUBLIC_*, optional ANTHROPIC_API_KEY, etc.)
-```
+**1. Build-time public (`NEXT_PUBLIC_*`) — GitHub Variables**
 
-Three configuration locations:
+These are baked into the JS bundle by webpack at build time. Every CI build starts from an empty environment, so they must be re-injected on every run. There is no "set once and forget" — if `deploy.yml` does not inject them, the next deploy produces a bundle with `undefined` values that overwrites your previous good deploy.
 
-1. **Local `.env.local`**: used by local dev and local `cf:preview`.
-2. **GitHub repo → Settings → Secrets and variables → Actions**: used by CI.
-   - Variables (non-sensitive): `NEXT_PUBLIC_UMAMI_SCRIPT_URL` / `NEXT_PUBLIC_UMAMI_WEBSITE_ID` / `NEXT_PUBLIC_GA_ID`
-   - Secrets (sensitive): `ANTHROPIC_API_KEY` (only when manually running the AI workflow)
-3. **Cloudflare Workers project → Settings → Variables and Secrets**: used by the production build and runtime.
-   - The same `NEXT_PUBLIC_*` variables must be configured here as well.
+Repo → Settings → Secrets and variables → Actions → **Variables** tab:
 
-### First-Time Deployment Steps
+| Key | Example |
+|---|---|
+| `NEXT_PUBLIC_UMAMI_SCRIPT_URL` | `https://cloud.umami.is/script.js` |
+| `NEXT_PUBLIC_UMAMI_WEBSITE_ID` | your Umami ID |
+| `NEXT_PUBLIC_GA_ID` | `G-XXXXXXXX` |
+| `NEXT_PUBLIC_ENABLE_UMAMI` | `true` |
+| `NEXT_PUBLIC_ENABLE_GA` | `true` |
+| `NEXT_PUBLIC_ENABLE_HETI` | `true` |
 
-1. **Revoke any leaked credentials** before continuing (see warning in `.env.example`).
-2. **Local validation**:
-   ```bash
-   npm install
-   npm run lint && npm run type-check && npm run test && npm run build
-   npm run cf:preview   # local Worker preview at port 8787
-   ```
-3. **Configure GitHub Vars / Secrets** as listed above.
-4. **Connect Cloudflare Workers Builds**:
-   - Cloudflare dashboard → Workers & Pages → **Create** → **Import a repository**
-   - Pick the GitHub repo → `main` branch
-   - Build command: `npm run cf:build`
-   - Deploy command: `npx opennextjs-cloudflare deploy`
-   - Add `NEXT_PUBLIC_*` under Build variables
-5. **Trigger deploy**: push any commit, or re-run the build from the dashboard.
-6. **Verify**: hit `/api/health` and the locale routes listed above.
+**2. CI-only secrets — GitHub Secrets**
+
+Repo → Settings → Secrets and variables → Actions → **Secrets** tab:
+
+| Key | Purpose |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | wrangler authentication. Create at CF → My Profile → API Tokens → template "Edit Cloudflare Workers" |
+| `CLOUDFLARE_ACCOUNT_ID` | Target account. CF dashboard right sidebar |
+| `ANTHROPIC_API_KEY` | Only if running the manual `ai-content-check` workflow |
+
+**3. Cloudflare Worker runtime secrets — Cloudflare dashboard**
+
+Read inside the Worker via `env.X`. Persist across deploys — `wrangler deploy` does NOT clear them. Currently this project has **none**: analytics keys are bundled at build time (category 1), AI keys are CI-only (category 2), no database, no server-side auth. Add here only when the Worker code itself needs to read a runtime secret.
+
+### First-Time Setup
+
+1. **Local development** — `cp .env.example .env.local`, fill values, used by `npm run dev` and `npm run cf:preview`. Never commit `.env.local`.
+2. **Configure GitHub Variables** — all `NEXT_PUBLIC_*` keys from the table above.
+3. **Configure GitHub Secrets** — `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+4. **Push to `main`** — `deploy.yml` triggers automatically. Watch progress in the Actions tab.
+5. **Verify** — hit `/api/health` and the locale routes listed above.
 
 ### Manual Deployment (Fallback)
 
-When Cloudflare Git integration is unavailable:
+When you need to deploy from your laptop without going through CI:
 
 ```bash
-# wrangler login first
+# Requires CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID in shell env or `wrangler login`
 npm run cf:deploy
 ```
 
+This uses your local `.env.local` for `NEXT_PUBLIC_*` injection.
+
 ### GitHub Actions Workflows
 
-- `ci.yml`: runs automatically on every push and PR. Lint, type-check, test, build. Does **not** deploy.
-- `ai-content-check.yml`: **manual trigger only** (`workflow_dispatch`). Run from the Actions tab → AI Content Check → **Run workflow**. Requires `ANTHROPIC_API_KEY` in repo Secrets.
+- `ci.yml`: lint / type-check / test / build on every push and PR. Does **not** deploy.
+- `deploy.yml`: build + deploy to Cloudflare on push to `main`. Also runnable manually via `workflow_dispatch`.
+- `ai-content-check.yml`: **manual trigger only**. Requires `ANTHROPIC_API_KEY` in Secrets.
+- `sync-wiki.yml`: syncs `docs/` to the GitHub wiki.
 
 ### Common Failure Modes
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| CI build complains about undefined `NEXT_PUBLIC_*` | GitHub Variables not set | Configure repo Variables |
-| Deploy succeeds but analytics script does not load | Cloudflare project missing `NEXT_PUBLIC_*` | Add them under Workers Settings |
+| `deploy.yml` fails with "Authentication error" | Missing or wrong `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` | Reconfigure Secrets |
+| Site deploys but analytics script does not load | `NEXT_PUBLIC_*` Variables not set in GitHub | Add them under repo Variables |
+| Push to `main` does nothing | `deploy.yml` missing, or `secrets`/`vars` not exposed to the branch | Inspect Actions tab; check repo Settings → Environments |
 | `/zh-CN/about` returns 500 | A regex rewrite was reintroduced | Inspect `next.config.ts`; see the Locale Routing section |
-| `ai-content-check` action keeps failing | Outdated workflow with auto-trigger and missing API key | Pull latest — workflow is now manual-only |
-| Push succeeds but site does not update | Cloudflare Git integration not connected | Follow first-time deployment step 4 |
+| Old Cloudflare Workers Builds (dashboard Git integration) still deploys in parallel | Both pipelines connected | Disconnect the dashboard integration; `deploy.yml` is the canonical path |
 
 ## Design Logic
 
