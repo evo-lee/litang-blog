@@ -26,6 +26,16 @@
   // Local development port. `opennextjs-cloudflare preview` uses this.
   "dev": {
     "port": 8787
+  },
+
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": true
+    }
   }
 
   // Future bindings (add only when actually needed):
