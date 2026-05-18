@@ -22,12 +22,23 @@ export async function GET(
     return new NextResponse('Invalid image token', { status: 400 });
   }
 
-  if (!src.startsWith('/') || src.startsWith('//') || src.startsWith('/image/')) {
+  if (!src.startsWith('/')) {
     return new NextResponse('Image source not allowed', { status: 400 });
   }
 
-  const target = new URL(src, request.url).toString();
-  const upstream = await fetch(target);
+  const requestUrl = new URL(request.url);
+  let target: URL;
+  try {
+    target = new URL(src, requestUrl);
+  } catch {
+    return new NextResponse('Invalid image source', { status: 400 });
+  }
+
+  if (target.origin !== requestUrl.origin || target.pathname.startsWith('/image/')) {
+    return new NextResponse('Image source not allowed', { status: 400 });
+  }
+
+  const upstream = await fetch(target.toString());
 
   if (!upstream.ok) {
     return new NextResponse('Image source unavailable', { status: 404 });
